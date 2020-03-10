@@ -7,42 +7,91 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <string.h>
+#include <math.h>
+#include <ctype.h>
 
-int main() {
-  pid_t pid, sid;        // Variabel untuk menyimpan PID
+int digits_only(const char *s)
+{
+    while (*s) {
+        if (isdigit(*s++) == 0) return 0;
+    }
 
-  pid = fork();     // Menyimpan PID dari Child Process
+    return 1;
+}
 
-  /* Keluar saat fork gagal
-  * (nilai variabel pid < 0) */
-  if (pid < 0) {
-    exit(EXIT_FAILURE);
-  }
+int checkNumber(char *s,int num){
+    if(strlen(s)>2 || strlen(s)==0) return 0;
+    if(strlen(s) == 1){
+        if(s[0] == '*') return 1;
+    }
+    if(!digits_only(s)) return 0;
+    // printf("%s\n",s);
+    int sum = 0;
+    int multiplier = 1;
+    for(int i=strlen(s)-1;i>=0;i--){
+        // printf("loop %d\n",sum);
+        sum += (s[i]-'0')*multiplier;
+        multiplier *= 10;
+    }
+    // printf("%d\n",sum);
+    return (sum<=num);
+}
 
-  /* Keluar saat fork berhasil
-  * (nilai variabel pid adalah PID dari child process) */
-  if (pid > 0) {
-    exit(EXIT_SUCCESS);
-  }
+int checkInput(char * arg1, char * arg2, char * arg3){
+    if(!checkNumber(arg1,59)){
+        return 0;
+    } 
+    if(!checkNumber(arg2,59)) {
+        // printf("%s\n",arg2);
+        return 0;
+    } 
+    if(!checkNumber(arg3,23)){
+        // printf("%s\n",arg3);
+        return 0;
+    } 
+}
+int main(int argc, char * argv[]) {
 
-  umask(0);
+    if(argc <= 4 || !checkInput(argv[1],argv[2],argv[3])){
+        printf("Bad Argument\n");
+        exit(EXIT_FAILURE);
+    }
 
-  sid = setsid();
-  if (sid < 0) {
-    exit(EXIT_FAILURE);
-  }
+    
+    // pid_t pid, sid;        // Variabel untuk menyimpan PID
 
-  if ((chdir("/")) < 0) {
-    exit(EXIT_FAILURE);
-  }
+    // pid = fork();     // Menyimpan PID dari Child Process
 
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
+    // /* Keluar saat fork gagal
+    // * (nilai variabel pid < 0) */
+    // if (pid < 0) {
+    //     exit(EXIT_FAILURE);
+    // }
 
-  while (1) {
-    // Tulis program kalian di sini
+    // /* Keluar saat fork berhasil
+    // * (nilai variabel pid adalah PID dari child process) */
+    // if (pid > 0) {
+    //     exit(EXIT_SUCCESS);
+    // }
 
-    sleep(30);
-  }
+    // umask(0);
+
+    // sid = setsid();
+    // if (sid < 0) {
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // if ((chdir("/")) < 0) {
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // close(STDIN_FILENO);
+    // close(STDOUT_FILENO);
+    // close(STDERR_FILENO);
+
+    // while (1) {
+    //     // Tulis program kalian di sini
+
+    //     sleep(30);
+    // }
 }
