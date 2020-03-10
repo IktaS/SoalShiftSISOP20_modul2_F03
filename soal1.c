@@ -19,13 +19,7 @@ int digits_only(const char *s)
     return 1;
 }
 
-int checkNumber(char *s,int num){
-    if(strlen(s)>2 || strlen(s)==0) return 0;
-    if(strlen(s) == 1){
-        if(s[0] == '*') return 1;
-    }
-    if(!digits_only(s)) return 0;
-    // printf("%s\n",s);
+int to_number(char *s){
     int sum = 0;
     int multiplier = 1;
     for(int i=strlen(s)-1;i>=0;i--){
@@ -33,6 +27,16 @@ int checkNumber(char *s,int num){
         sum += (s[i]-'0')*multiplier;
         multiplier *= 10;
     }
+    return sum;
+}
+int checkNumber(char *s,int num){
+    if(strlen(s)>2 || strlen(s)==0) return 0;
+    if(strlen(s) == 1){
+        if(s[0] == '*') return 1;
+    }
+    if(!digits_only(s)) return 0;
+    // printf("%s\n",s);
+    int sum = to_number(s);
     // printf("%d\n",sum);
     return (sum<=num);
 }
@@ -57,7 +61,11 @@ int main(int argc, char * argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    
+    if(!fopen(argv[4], "r")){
+        printf("Bad Path");
+        exit(EXIT_FAILURE);
+    }
+
     // pid_t pid, sid;        // Variabel untuk menyimpan PID
 
     // pid = fork();     // Menyimpan PID dari Child Process
