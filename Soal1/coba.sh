@@ -1,2 +1,1 @@
-now=$(date +"%T");
-echo "$now" >> b.txt
+date +"%T" >> time.txt

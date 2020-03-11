@@ -41,6 +41,7 @@ int checkNumber(char *s,int num){
     // printf("%s\n",s);
     int sum = to_number(s);
     // printf("%d\n",sum);
+    if(sum <0) return 0;
     return (sum<=num);
 }
 
@@ -64,11 +65,11 @@ int calculateNeedToSleep(struct tm * curTime,char * sec, char * min, char * hour
         sleepTime += ((60-curTime->tm_sec) + to_number(sec))%60;
     }
     // printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
-    if(curTime->tm_min != to_number(min)+1 && strcmp(min,"*") != 0){
+    if(curTime->tm_min != to_number(min) && strcmp(min,"*") != 0){
         sleepTime += (((60-curTime->tm_min) + to_number(min))%60)*60;
     }
     // printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
-    if(curTime->tm_hour != to_number(hour)+1 && strcmp(hour,"*") != 0){
+    if(curTime->tm_hour != to_number(hour) && strcmp(hour,"*") != 0){
         sleepTime += (((24-curTime->tm_hour) + to_number(hour))%24)*3600;
     }
     // printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
