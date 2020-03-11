@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <wait.h>
 #include <time.h>
 
 int digits_only(const char *s)
@@ -62,16 +63,31 @@ int calculateNeedToSleep(struct tm * curTime,char * sec, char * min, char * hour
     if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
         sleepTime += ((60-curTime->tm_sec) + to_number(sec))%60;
     }
-    printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
+    // printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
     if(curTime->tm_min != to_number(min)+1 && strcmp(min,"*") != 0){
         sleepTime += (((60-curTime->tm_min) + to_number(min))%60)*60;
     }
-    printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
+    // printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
     if(curTime->tm_hour != to_number(hour)+1 && strcmp(hour,"*") != 0){
         sleepTime += (((24-curTime->tm_hour) + to_number(hour))%24)*3600;
     }
-    printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
+    // printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
+    if(sleepTime == 0) sleepTime = 1;
     return sleepTime;
+}
+
+char * getdir(char* dir){
+    char * finaldir = (char*) malloc(sizeof(char)*strlen(dir));
+    strcpy(finaldir,dir);
+    // printf("%s\n",finaldir);
+    for (int i = strlen(finaldir)-1; i > 0; i--)
+    {
+        if(finaldir[i-1] == '/'){
+            finaldir[i] = '\0';
+            break;
+        }
+    }
+    return finaldir;
 }
 
 int main(int argc, char * argv[]) {
@@ -86,20 +102,27 @@ int main(int argc, char * argv[]) {
         exit(EXIT_FAILURE);
     }
 
-   
+    // while(1){
+    //     time_t rawTime;
+    //     struct tm * currentTime;
+    //     time(&rawTime);
+    //     currentTime = localtime(&rawTime);
+    //     int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
+    //     sleep(sleepTime);
+    //     printf("%s\n",getdir(argv[4]));
+    // }
+    // return 0;
 
-    pid_t pid, sid;        // Variabel untuk menyimpan PID
+    pid_t pid, sid; 
 
-    pid = fork();     // Menyimpan PID dari Child Process
+    pid = fork(); 
 
-    /* Keluar saat fork gagal
-    * (nilai variabel pid < 0) */
+  
     if (pid < 0) {
         exit(EXIT_FAILURE);
     }
 
-    /* Keluar saat fork berhasil
-    * (nilai variabel pid adalah PID dari child process) */
+    
     if (pid > 0) {
         exit(EXIT_SUCCESS);
     }
@@ -111,7 +134,7 @@ int main(int argc, char * argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    if ((chdir("/home/ikta/")) < 0) {
+    if ((chdir(getdir(argv[4]))) < 0) {
         exit(EXIT_FAILURE);
     }
 
@@ -119,7 +142,6 @@ int main(int argc, char * argv[]) {
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
-    int index = 0;
     while (1) {
 
         time_t rawTime;
@@ -138,15 +160,13 @@ int main(int argc, char * argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        char number[] = {index + '0','0'};
         if(child_id == 0){
-            if((chdir("/home/ikta/")) < 0){
+            char * dir = getdir(argv[4]);
+            if((chdir(dir)) < 0){
                 exit(EXIT_FAILURE);
             }
             char *bashargv[] = {"bash",argv[4],NULL};
             execv("/usr/bin/bash",bashargv);
-            FILE * openfile = fopen("test.txt","w+");
-            fputs("lol\n",openfile);
         }
     }
 }
