@@ -1,2 +1,2 @@
-pwd > /home/ikta/a.txt
-echo 'yey' > /home/ikta/b.txt
+pwd >> /home/ikta/a.txt
+echo 'lol' >> /home/ikta/b.txt

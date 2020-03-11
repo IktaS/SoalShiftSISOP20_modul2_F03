@@ -57,6 +57,23 @@ int checkInput(char * arg1, char * arg2, char * arg3){
     } 
 }
 
+int calculateNeedToSleep(struct tm * curTime,char * sec, char * min, char * hour){
+    int sleepTime = 0;
+    if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
+        sleepTime += ((60-curTime->tm_sec) + to_number(sec))%60;
+    }
+    printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
+    if(curTime->tm_min != to_number(min)+1 && strcmp(min,"*") != 0){
+        sleepTime += (((60-curTime->tm_min) + to_number(min))%60)*60;
+    }
+    printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
+    if(curTime->tm_hour != to_number(hour)+1 && strcmp(hour,"*") != 0){
+        sleepTime += (((24-curTime->tm_hour) + to_number(hour))%24)*3600;
+    }
+    printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
+    return sleepTime;
+}
+
 int main(int argc, char * argv[]) {
 
     if(argc <= 4 || !checkInput(argv[1],argv[2],argv[3])){
@@ -68,6 +85,8 @@ int main(int argc, char * argv[]) {
         printf("Bad Path");
         exit(EXIT_FAILURE);
     }
+
+   
 
     pid_t pid, sid;        // Variabel untuk menyimpan PID
 
@@ -100,28 +119,17 @@ int main(int argc, char * argv[]) {
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
-    
+    int index = 0;
     while (1) {
-        // Tulis program kalian di sini
+
         time_t rawTime;
         struct tm * currentTime;
         time(&rawTime);
         currentTime = localtime(&rawTime);
 
-        int sleepTime = 0;
-        if(currentTime->tm_sec != to_number(argv[1]) && strcmp(argv[1],"*") != 0){
-            sleepTime += abs(to_number(argv[1]) - currentTime->tm_sec);
-        }
-        // printf("%d\n",sleepTime);
-        if(currentTime->tm_min != to_number(argv[2]) && strcmp(argv[2],"*") != 0){
-            sleepTime += abs(to_number(argv[2]) - currentTime->tm_min)*60;
-        }
-        // printf("%d\n",sleepTime);
-        if(currentTime->tm_hour != to_number(argv[3]) && strcmp(argv[3],"*") != 0){
-            sleepTime += abs(to_number(argv[3]) - currentTime->tm_hour)*3600;
-        }
-        // printf("%d\n",sleepTime);
+        int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
         sleep(sleepTime);
+        // return 0;
 
         pid_t child_id;
         child_id = fork();
@@ -130,15 +138,15 @@ int main(int argc, char * argv[]) {
             exit(EXIT_FAILURE);
         }
 
+        char number[] = {index + '0','0'};
         if(child_id == 0){
             if((chdir("/home/ikta/")) < 0){
                 exit(EXIT_FAILURE);
             }
             char *bashargv[] = {"bash",argv[4],NULL};
             execv("/usr/bin/bash",bashargv);
-        }else{
-            continue;
+            FILE * openfile = fopen("test.txt","w+");
+            fputs("lol\n",openfile);
         }
-
     }
 }
