@@ -11,6 +11,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <math.h>
+#include <signal.h>
 
 void intToString(int num, char * string, int base){
     char buffer[10000];
@@ -198,10 +199,11 @@ int main(){
             forkAndZipDir(zipName,folderName);
             forkAndRemoveDir(folderName);
             // printf("keluar");
-            exit(EXIT_SUCCESS);
+            kill((int)getpid(),SIGKILL);
+            return 0;
         }else{
             sleep(30);
-            // continue;
+            continue;
             // return 0;
         }
     }
