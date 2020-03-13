@@ -135,6 +135,13 @@ void makeKiller2(){
 }
 
 int main(int argc, char ** argv){
+    if(strcmp(argv[1],"-a") == 0){
+        makeKiller1();
+    }else if(strcmp(argv[1],"-b")==0){
+        makeKiller2();
+    }else{
+        makeKiller2();
+    }
     pid_t pid, sid;
     pid = fork();
     if (pid < 0) {
@@ -142,13 +149,6 @@ int main(int argc, char ** argv){
     }
     if (pid > 0) {
         exit(EXIT_SUCCESS);
-    }
-    if(strcmp(argv[1],"-a") == 0){
-        makeKiller1();
-    }else if(strcmp(argv[1],"-b")==0){
-        makeKiller2();
-    }else{
-        makeKiller2();
     }
 
     umask(0);
