@@ -562,8 +562,271 @@ RemoveDir(dirPath) untuk menghapus sebuah directory dirPath.
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal3/soal3.c)
 
 Diminta untuk membuat program yang bisa :  
-  a. membuat dua directory, indomie dan sedaap di /home/[USER]/modul2/  
+  a. membuat dua directory, indomie dan sedaap setelah 5 detik di /home/[USER]/modul2/  
   b. mengekstrak file jpg.zip di /home/[USER]/modul2/  
   c. memindahkan hasil ekstrak zip, /home/[USER]/modul2/jpg/ , semua file ke folder sedaap, dan semua directory ke folder indomie  
-  d. membuat dua file kosong coba1.txt dan coba2.txt ke semua folder di /home/[USER]/modul2/indomie/  
+  d. membuat dua file kosong coba1.txt dan coba2.txt setelah 3 detik ke semua folder di /home/[USER]/modul2/indomie/  
+  
+  main function :
+```c
+int main() {
+  char indomie[] = "indomie";
+  char sedaap[] = "sedaap";
+  char modul2Dir[] = "/home/ikta/modul2/";
+  char jpgFile[] = "jpg.zip";
+  char coba1File[] = "coba1.txt";
+  char coba2File[] = "coba2.txt";
 
+
+
+  if((chdir(modul2Dir)) < 0){
+      exit(EXIT_FAILURE);
+  }
+
+  char indomieDir[10000]; 
+  forkAndMakeDir(indomieDir,indomie);
+  sleep(5);
+  char sedaapDir[10000];
+  forkAndMakeDir(sedaapDir,sedaap);
+  char jpgDir[10000];
+  forkAndUnzip(jpgDir,jpgFile);
+  sortThroughZip(jpgDir,indomieDir,sedaapDir);
+  sortThroughDirectory(indomieDir,coba1File,coba2File);
+}
+```
+
+```c
+char indomie[] = "indomie";
+char sedaap[] = "sedaap";
+char modul2Dir[] = "/home/ikta/modul2/";
+char jpgFile[] = "jpg.zip";
+char coba1File[] = "coba1.txt";
+char coba2File[] = "coba2.txt";
+```
+bagian ini untuk menginisiasi semua nama nama yang akan digunakan.
+```c
+ char indomieDir[10000]; 
+forkAndMakeDir(indomieDir,indomie);
+sleep(5);
+char sedaapDir[10000];
+forkAndMakeDir(sedaapDir,sedaap);
+```
+bagian ini untuk membuat directory indomie, lalu setelah 5 detik, membuat directory sedaap, dua duanya menggunakan forkAndMakeDir()  
+```c
+void forkAndMakeDir(char * finalDir,char * dir){
+    pid_t child_id;
+    int status;
+    char buffer[10000];
+    getcwd(buffer,sizeof(buffer));
+    strcpy(finalDir,buffer);
+    strcat(finalDir,"/");
+    strcat(finalDir,dir);
+    strcat(finalDir,"/");
+    child_id = fork();
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+
+    if(child_id == 0){
+        char * argv[] = {"mkdir","-p",dir,NULL};
+        execv("/usr/bin/mkdir",argv);
+    }else{
+        wait(&status);
+        return;
+    }
+}
+```
+forkAndMakeDir akan membuat child untuk menjalankan mkdir,dan mempassing string path dari directory yang dibuat ke finalDir  
+```c
+ char jpgDir[10000];
+ forkAndUnzip(jpgDir,jpgFile);
+```
+untuk mengunzip file jpg
+```c
+void forkAndUnzip(char * finalDir,char * file){
+    pid_t child_id;
+    int status;
+    child_id = fork();
+
+    char buffer[10000];
+    getcwd(buffer,sizeof(buffer));
+    strcpy(finalDir,buffer);
+    strcat(finalDir,"/");
+    getFileName(buffer,file);
+    strcat(finalDir,buffer);
+    strcat(finalDir,"/");
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        char * argv[] = {"unzip","-qq",file,NULL};
+        execv("/usr/bin/unzip",argv);
+    }else{
+        wait(&status);
+        return;
+    }
+}
+```
+forkAndUnzip akan membuat child yang akan mengunzip file, lalu mempassing path dari file yang di extract ke finalDir
+```c
+void sortThroughZip(char * folderPath, char * dirFolder, char * fileFolder){
+    char beforePath[10000];
+    getcwd(beforePath,sizeof(beforePath));
+    strcat(beforePath,"/");
+    if(chdir(folderPath) < 0 ){
+        exit(EXIT_FAILURE);
+    }
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d){
+        while ((dir = readdir(d)) != NULL){
+            if(is_regular_file(dir->d_name)){
+                forkAndMove(dir->d_name,fileFolder);
+            }else{
+                if(strcmp(dir->d_name,"..") != 0 && strcmp(dir->d_name,".") != 0){
+                    forkAndMove(dir->d_name,dirFolder);
+                }
+            }
+        }
+        closedir(d);
+    }
+    if(chdir(beforePath) < 0){
+        exit(EXIT_FAILURE);
+    }
+}
+```
+fungsi sortThroughZip menerima folderPath yaitu path directory yang akan di sort, dirFolder yaitu path tempat memindah semua directory, dan fileFolder yaitu path tempat memindah semua file.
+```c
+DIR *d;
+struct dirent *dir;
+d = opendir(".");
+if (d){
+    while ((dir = readdir(d)) != NULL){
+        if(is_regular_file(dir->d_name)){
+            forkAndMove(dir->d_name,fileFolder);
+        }else{
+            if(strcmp(dir->d_name,"..") != 0 && strcmp(dir->d_name,".") != 0){
+                forkAndMove(dir->d_name,dirFolder);
+            }
+        }
+    }
+    closedir(d);
+}
+```
+bagian ini akan mengecek semua yang ada dalam directory, dan jika merupakan file ( dicek dengan is_regular_file()) akan dipindah ke fileFolder dengan forkAndMove, dan jika bukan file, dan jika bukan "." maupun "..", akan dipindah ke dirFolder dengan forkAndMove.  
+```c
+int is_regular_file( char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+
+void forkAndMove(char * src, char * dest){
+    int status;
+    pid_t child_id;
+    child_id = fork();
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        char * argv[] = {"mv",src,dest,NULL};
+        execv("/usr/bin/mv",argv);
+    }else{
+        wait(&status);
+    }
+}
+```
+forkAndMove akan membuat child dan mengeksekusi execv mv di child itu.
+```c
+sortThroughDirectory(indomieDir,coba1File,coba2File);
+```
+akan membuat dua file, coba1.txt dan coba2.txt di setiap folder di indomieDir.
+```c
+void sortThroughDirectory(char * folderPath, char * file1, char * file2){
+    char beforePath[10000];
+    getcwd(beforePath,sizeof(beforePath));
+    strcat(beforePath,"/");
+    if(chdir(folderPath) < 0 ){
+        exit(EXIT_FAILURE);
+    }
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d){
+        while ((dir = readdir(d)) != NULL){
+            if(!is_regular_file(dir->d_name)){
+                if(strcmp(dir->d_name,"..") != 0 && strcmp(dir->d_name,".") != 0){
+                    char buffer[10000];
+                    strcpy(buffer,dir->d_name);
+                    strcat(buffer,"/");
+                    if(chdir(buffer) < 0){
+                        exit(EXIT_FAILURE);
+                    }
+                    forkAndTouch(file1);
+                    sleep(3);
+                    forkAndTouch(file2);
+                    if(chdir("..") < 0){
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+        }
+        closedir(d);
+    }
+    if(chdir(beforePath) < 0){
+        exit(EXIT_FAILURE);
+    }
+}
+```
+sortThroughDirectory()
+```c
+DIR *d;
+struct dirent *dir;
+d = opendir(".");
+if (d){
+    while ((dir = readdir(d)) != NULL){
+        if(!is_regular_file(dir->d_name)){
+            if(strcmp(dir->d_name,"..") != 0 && strcmp(dir->d_name,".") != 0){
+                char buffer[10000];
+                strcpy(buffer,dir->d_name);
+                strcat(buffer,"/");
+                if(chdir(buffer) < 0){
+                    exit(EXIT_FAILURE);
+                }
+                forkAndTouch(file1);
+                sleep(3);
+                forkAndTouch(file2);
+                if(chdir("..") < 0){
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+    closedir(d);
+}
+```
+bagian ini akan mengiterasi semua yang ada dalam dir, lalu jika ada yang berupa folder, akan membuat file1 dengan forkAndTouch(), lalu setelah 3 detik membuat file2 dengan cara yang sama.  
+```c
+void forkAndTouch(char * filename){
+    int status;
+    pid_t child_id;
+    child_id = fork();
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        char * argv[] = {"touch",filename,NULL};
+        execv("/usr/bin/touch",argv);
+    }else{
+        wait(&status);
+        return;
+    }
+}
+```
+forkAndTouch akan membuat child lalu mengeksekusi execv touch di child itu.
