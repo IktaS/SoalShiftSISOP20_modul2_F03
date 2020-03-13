@@ -4,16 +4,16 @@ Pengerjaan Praktikum 2 SisOp Kelompok F03
 ## Soal 1
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal1/soal1.c)
 
-Diminta membuat program seperti crontab, diminta : 
-  A. menerima 4 argumen :
-    i. Detik: 0-59 atau * (any value)
-    ii. Menit: 0-59 atau * (any value)
-    iii. Jam: 0-23 atau * (any value)
-    iv. Path file .sh
-  B. mengeluarkan pesan error jika argumen yang diberikan tidak sesuai
-  C. hanya menerima 1 config cron
-  D. berjalan di background
-
+Diminta membuat program seperti crontab, diminta :   
+  A. menerima 4 argumen :  
+    i. Detik: 0-59 atau * (any value)  
+    ii. Menit: 0-59 atau * (any value)  
+    iii. Jam: 0-23 atau * (any value)  
+    iv. Path file .sh  
+  B. mengeluarkan pesan error jika argumen yang diberikan tidak sesuai  
+  C. hanya menerima 1 config cron  
+  D. berjalan di background  
+  
 main function :
 ```c
 int main(int argc, char * argv[]) {
@@ -175,9 +175,9 @@ close(STDIN_FILENO);
 close(STDOUT_FILENO);
 close(STDERR_FILENO);
 ```
-akan menjalankan program di background
-Sekarang masuk ke bagian pentingnya, apa yang dijalankan.
-Di dalam while,
+akan menjalankan program di background  
+Sekarang masuk ke bagian pentingnya, apa yang dijalankan.  
+Di dalam while,  
 ```c
 time_t rawTime;
 struct tm * currentTime;
@@ -272,13 +272,13 @@ getdir() adalah utility function untuk mendapatkan directory dari file.
 # Soal 2
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal2/soal2.c)
 
-Diminta membuat sebuah program "downloader" yang berjalan di background, yang bisa :
-  a. membuat folder dengan nama timestamp "YYYY-mm-dd_HH:ii:ss" setiap 30 detik
-  b. setiap folder itu diisi dengan 20 image berukuran t%1000 + 100(t adalah epoch unix), yang diambil dari picsum.photos setiap 5 detik.
-  c. setelah terisi 20 image, folder tersebut di zip, lalu folder tersebut dihapus.
-  d. program mengenerate killer executable yang akan menghentikan semua process, berdasarkan mode yang diinput sebagai parameter di program utama, "-a" agar killer executable menghentikan semua process dari soal2, "-b" agar killer executable menghentikan process utama, tapi process yang masih berjalan dibiarkan.
+Diminta membuat sebuah program "downloader" yang berjalan di background, yang bisa :  
+  a. membuat folder dengan nama timestamp "YYYY-mm-dd_HH:ii:ss" setiap 30 detik  
+  b. setiap folder itu diisi dengan 20 image berukuran t%1000 + 100(t adalah epoch unix), yang diambil dari picsum.photos setiap 5 detik.  
+  c. setelah terisi 20 image, folder tersebut di zip, lalu folder tersebut dihapus.  
+  d. program mengenerate killer executable yang akan menghentikan semua process, berdasarkan mode yang diinput sebagai parameter di program utama, "-a" agar killer executable menghentikan semua process dari soal2, "-b" agar killer executable menghentikan process utama, tapi process yang masih berjalan dibiarkan.  
  
- main function:
+ main function:  
  ```c
 int main(int argc, char ** argv){
     if(strcmp(argv[1],"-a") == 0){
@@ -374,7 +374,7 @@ void makeKiller2(){
     chmod("killer", ~0);
 }
 ```
-makeKiller1() dan makeKiller2() adalah utility function untuk mengenerate file executable. makeKiller1() akan membuat file executable yang akan menjalankan killall soal2 untuk menghentikan semua process soal2, sedangkan makeKiller2() akan mencari PID dari session leader soal2, lalu membunuh session leadernya. Dengan cara ini, process pembuatan folder baru akan berhenti, tapi process download image, dll akan tetap berjalan di yang sudah berjalan.
+makeKiller1() dan makeKiller2() adalah utility function untuk mengenerate file executable. makeKiller1() akan membuat file executable yang akan menjalankan killall soal2 untuk menghentikan semua process soal2, sedangkan makeKiller2() akan mencari PID dari session leader soal2, lalu membunuh session leadernya. Dengan cara ini, process pembuatan folder baru akan berhenti, tapi process download image, dll akan tetap berjalan di yang sudah berjalan.  
 ```c
 pid_t pid, sid;
 pid = fork();
@@ -433,7 +433,7 @@ if(child_id == 0){
     continue;
 }
 ```
-di dalam while(1), pertama kita membuat child, di child inilah dijalankan process membuat folder dengan forkAndMakeDir(), mendownload 20 image dengan forkAndDownloadNImage(20), membuat zip dengan forkAndZipDir(), dan menghapus directory dengan RemoveDir(). dilakukan pembuatan child agar tetap bisa dilakukan pembuatan folder walaupun masih ada process mendownload di folder lain.
+di dalam while(1), pertama kita membuat child, di child inilah dijalankan process membuat folder dengan forkAndMakeDir(), mendownload 20 image dengan forkAndDownloadNImage(20), membuat zip dengan forkAndZipDir(), dan menghapus directory dengan RemoveDir(). dilakukan pembuatan child agar tetap bisa dilakukan pembuatan folder walaupun masih ada process mendownload di folder lain.  
 ```c
 void forkAndMakeDir(char * finalDir,char * dir){
     pid_t child_id;
@@ -460,7 +460,7 @@ void forkAndMakeDir(char * finalDir,char * dir){
     }
 }
 ```
-forkAndMakeDir(finalDir,dir) digunakan untuk membuat directory bernama dir, dan passing path akhir dari directory yang dibuat ke finalDir.
+forkAndMakeDir(finalDir,dir) digunakan untuk membuat directory bernama dir, dan passing path akhir dari directory yang dibuat ke finalDir.  
 ```c
 if(chdir(dirPath) < 0){
     exit(EXIT_FAILURE);
@@ -470,7 +470,7 @@ if(chdir("..") < 0){
     exit(EXIT_FAILURE);
 }
 ```
-pertama kita perlu pindah ke dalam folder dimana kita ingin mendownload image kita, setelah selesai kita juga kembali ke parent folder folder itu.
+pertama kita perlu pindah ke dalam folder dimana kita ingin mendownload image kita, setelah selesai kita juga kembali ke parent folder folder itu.  
 ```c
 void forkAndDownloadNImage(int number){
     pid_t child_id;
@@ -499,7 +499,7 @@ void forkAndDownloadNImage(int number){
     
 }
 ```
-untuk mendownload image sebanyak number dengan forkAndDownloadImage(), dijarak sebanyak 5 detik dengan sleep(5), dan hanya return ketika selesai menunggu semua terdownload.
+untuk mendownload image sebanyak number dengan forkAndDownloadImage(), dijarak sebanyak 5 detik dengan sleep(5), dan hanya return ketika selesai menunggu semua terdownload.  
 ```c
 void forkAndDownloadImage(char * name, char * link){
     pid_t child_id;
@@ -517,7 +517,7 @@ void forkAndDownloadImage(char * name, char * link){
     }
 }
 ```
-bagian ini untuk membuat child lalu mendownload image dengan execv wget di child tersebut.
+bagian ini untuk membuat child lalu mendownload image dengan execv wget di child tersebut.  
 ```c
 char zipName[10000];
 char folderName[10000];
@@ -549,21 +549,21 @@ void forkAndZipDir(char * finalFileName,char * dir){
     }
 }
 ```
-forkAndZipDir(finalFileName,dir) akan menzip directory di dir, lalu passing output dari finalFileName menjadi finalFileName.zip, dan hanya return ketika zip selesai.
+forkAndZipDir(finalFileName,dir) akan menzip directory di dir, lalu passing output dari finalFileName menjadi finalFileName.zip, dan hanya return ketika zip selesai.  
 ```c
 void RemoveDir(char * dirPath){
     char * argv[] = {"rm","-rf",dirPath,NULL};
     execv("/usr/bin/rm",argv);
 }
 ```
-RemoveDir(dirPath) untuk menghapus sebuah directory dirPath.
+RemoveDir(dirPath) untuk menghapus sebuah directory dirPath.  
 
 # Soal 3
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal3/soal3.c)
 
-Diminta untuk membuat program yang bisa :
-  a. membuat dua directory, indomie dan sedaap di /home/[USER]/modul2/
-  b. mengekstrak file jpg.zip di /home/[USER]/modul2/
-  c. memindahkan hasil ekstrak zip, /home/[USER]/modul2/jpg/ , semua file ke folder sedaap, dan semua directory ke folder indomie
-  d. membuat dua file kosong coba1.txt dan coba2.txt ke semua folder di /home/[USER]/modul2/indomie/
+Diminta untuk membuat program yang bisa :  
+  a. membuat dua directory, indomie dan sedaap di /home/[USER]/modul2/  
+  b. mengekstrak file jpg.zip di /home/[USER]/modul2/  
+  c. memindahkan hasil ekstrak zip, /home/[USER]/modul2/jpg/ , semua file ke folder sedaap, dan semua directory ke folder indomie  
+  d. membuat dua file kosong coba1.txt dan coba2.txt ke semua folder di /home/[USER]/modul2/indomie/  
 
