@@ -112,7 +112,6 @@ void forkAndDownloadImage(char * name, char * link){
         char *argv[] = {"wget","-q","-O",name,link,NULL};
         execv("/usr/bin/wget",argv);
     }else{
-        //wait(&status);
         return;
     }
 }
