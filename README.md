@@ -64,9 +64,10 @@ int main(int argc, char * argv[]) {
         time(&rawTime);
         currentTime = localtime(&rawTime);
 
-        int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
-        sleep(sleepTime);
-        // return 0;
+        if(!stopDoing(currentTime,argv[1],argv[2],argv[3])){
+            sleep(1);
+            continue;
+        }
 
         pid_t child_id;
         child_id = fork();
@@ -83,6 +84,7 @@ int main(int argc, char * argv[]) {
             char *bashargv[] = {"bash",argv[4],NULL};
             execv("/usr/bin/bash",bashargv);
         }
+        sleep(1);
     }
 }
 ```
@@ -114,7 +116,6 @@ int to_number(char *s){
     int sum = 0;
     int multiplier = 1;
     for(int i=strlen(s)-1;i>=0;i--){
-        // printf("loop %d\n",sum);
         sum += (s[i]-'0')*multiplier;
         multiplier *= 10;
     }
@@ -126,9 +127,7 @@ int checkNumber(char *s,int num){
         if(s[0] == '*') return 1;
     }
     if(!digits_only(s)) return 0;
-    // printf("%s\n",s);
     int sum = to_number(s);
-    // printf("%d\n",sum);
     if(sum <0) return 0;
     return (sum<=num);
 }
@@ -138,11 +137,9 @@ int checkInput(char * arg1, char * arg2, char * arg3){
         return 0;
     } 
     if(!checkNumber(arg2,59)) {
-        // printf("%s\n",arg2);
         return 0;
     } 
     if(!checkNumber(arg3,23)){
-        // printf("%s\n",arg3);
         return 0;
     } 
 }
@@ -213,30 +210,31 @@ struct tm * currentTime;
 time(&rawTime);
 currentTime = localtime(&rawTime);
 
-int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
-sleep(sleepTime);
-```
-ini digunakan untuk menghitung waktu yang diperlukan program untuk sleep sampai waktu eksekusi selanjutnya.
-```c
-int calculateNeedToSleep(struct tm * curTime,char * sec, char * min, char * hour){
-    int sleepTime = 0;
-    if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
-        sleepTime += ((60-curTime->tm_sec) + to_number(sec))%60;
-    }
-    // printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
-    if(curTime->tm_min != to_number(min) && strcmp(min,"*") != 0){
-        sleepTime += (((60-curTime->tm_min) + to_number(min))%60)*60;
-    }
-    // printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
-    if(curTime->tm_hour != to_number(hour) && strcmp(hour,"*") != 0){
-        sleepTime += (((24-curTime->tm_hour) + to_number(hour))%24)*3600;
-    }
-    // printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
-    if(sleepTime == 0) sleepTime = 1;
-    return sleepTime;
+
+if(!stopDoing(currentTime,argv[1],argv[2],argv[3])){
+    sleep(1);
+    continue;
 }
 ```
-calculateNeedToSleep() adalah utility function untuk membantu menghitung itu.
+ini digunakan untuk mengulagi loop sampai sudah waktunya mengeksekusi.
+```c
+int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
+    int sleepTime = 0;
+
+    if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
+        sleepTime += 1;
+    }
+    if(curTime->tm_min != to_number(min) && strcmp(min,"*") != 0){
+        sleepTime += 1;
+    }
+    if(curTime->tm_hour != to_number(hour) && strcmp(hour,"*") != 0){
+        sleepTime += 1;
+    }
+    if(sleepTime == 0) return 1;
+    else return 0;
+}
+```
+stopDoing() adalah utility function untuk membantu mengetahui apakah sudah waktu untuk menjalankan fungsi.
 ```c
 pid_t child_id;
 child_id = fork();
@@ -259,7 +257,6 @@ bagian ini akan membuat child, dan childnya akan menjalankan shell script dengan
 char * getdir(char* dir){
     char * finaldir = (char*) malloc(sizeof(char)*strlen(dir));
     strcpy(finaldir,dir);
-    // printf("%s\n",finaldir);
     for (int i = strlen(finaldir)-1; i > 0; i--)
     {
         if(finaldir[i-1] == '/'){
@@ -271,3 +268,92 @@ char * getdir(char* dir){
 }
 ```
 getdir() adalah utility function untuk mendapatkan directory dari file.
+
+# Soal 2
+[Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal2/soal2.c)
+Diminta membuat sebuah program "downloader" yang berjalan di background, yang bisa :
+  a. membuat folder dengan nama timestamp "YYYY-mm-dd_HH:ii:ss" setiap 30 detik
+  b. setiap folder itu diisi dengan 20 image berukuran t%1000 + 100(t adalah epoch unix), yang diambil dari picsum.photos setiap 5 detik.
+  c. setelah terisi 20 image, folder tersebut di zip, lalu folder tersebut dihapus.
+  d. program mengenerate killer executable yang akan menghentikan semua process, berdasarkan mode yang diinput sebagai parameter di program utama, "-a" agar killer executable menghentikan semua process dari soal2, "-b" agar killer executable menghentikan process utama, tapi process yang masih berjalan dibiarkan.
+ 
+ main function:
+ ```c
+ int main(int argc, char ** argv){
+    pid_t pid, sid;
+    pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+    if(strcmp(argv[1],"-a") == 0){
+        makeKiller1();
+    }else if(strcmp(argv[1],"-b")==0){
+        makeKiller2();
+    }else{
+        makeKiller2();
+    }
+
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    char buffer[10000];
+    getcwd(buffer,sizeof(buffer));
+    strcat(buffer,"/");
+    if ((chdir(buffer)) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    while (1) {
+        pid_t child_id;
+        child_id = fork();
+        if(child_id<0){
+            exit(EXIT_FAILURE);
+        }
+        if(child_id == 0){
+            char timeString[10000];
+            getTime(timeString);
+            char dirPath[10000];
+            forkAndMakeDir(dirPath,timeString);
+            if(chdir(dirPath) < 0){
+                exit(EXIT_FAILURE);
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                char link[] = "https://picsum.photos/";
+                char name[10000];
+                getTime(name);
+                int size = (time(NULL)%1000) + 100;
+                char sizeString[10000];
+                intToString(size,sizeString,10);
+                strcat(link,sizeString);
+                forkAndDownloadImage(name,link);
+                sleep(5);
+            }
+            if(chdir("..") < 0){
+                exit(EXIT_FAILURE);
+            }
+            char zipName[10000];
+            char folderName[10000];
+            strcpy(zipName,timeString);
+            strcpy(folderName,timeString);
+            forkAndZipDir(zipName,folderName);
+            RemoveDir(folderName);
+        }else{
+            sleep(30);
+            continue;
+        }
+    }
+}
+```
+  
