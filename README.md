@@ -2,7 +2,7 @@
 Pengerjaan Praktikum 2 SisOp Kelompok F03
 
 ## Soal 1
-[Source Code] (https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal1/soal1.c)
+[Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal1/soal1.c)
 
 Diminta membuat program seperti crontab, diminta : 
   A. menerima 4 argumen :
