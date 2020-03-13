@@ -20,7 +20,6 @@ int is_regular_file( char *path)
 char * getdir(char* dir){
     char * finaldir = (char*) malloc(sizeof(char)*strlen(dir));
     strcpy(finaldir,dir);
-    // printf("%s\n",finaldir);
     for (int i = strlen(finaldir)-1; i > 0; i--)
     {
         if(finaldir[i-1] == '/'){
@@ -51,7 +50,6 @@ void forkAndMakeDir(char * finalDir,char * dir){
         execv("/usr/bin/mkdir",argv);
     }else{
         wait(&status);
-        // printf("%s\n",finalDir);
         return;
     }
 }
@@ -164,14 +162,11 @@ void sortThroughDirectory(char * folderPath, char * file1, char * file2){
     d = opendir(".");
     if (d){
         while ((dir = readdir(d)) != NULL){
-            // printf("not always regular %s\n",dir->d_name);
             if(!is_regular_file(dir->d_name)){
-                // printf("always not regular file %s\n",dir->d_name);
                 if(strcmp(dir->d_name,"..") != 0 && strcmp(dir->d_name,".") != 0){
                     char buffer[10000];
                     strcpy(buffer,dir->d_name);
                     strcat(buffer,"/");
-                    // printf("enter %s\n",buffer);
                     if(chdir(buffer) < 0){
                         exit(EXIT_FAILURE);
                     }
