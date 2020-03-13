@@ -48,6 +48,8 @@ void RemoveDir(char * dirPath){
     execv("/usr/bin/rm",argv);
 }
 
+
+
 void forkAndZipDir(char * finalFileName,char * dir){
     pid_t child_id;
     int status;
@@ -110,28 +112,55 @@ void forkAndDownloadImage(char * name, char * link){
         char *argv[] = {"wget","-q","-O",name,link,NULL};
         execv("/usr/bin/wget",argv);
     }else{
-        wait(&status);
+        //wait(&status);
         return;
     }
 }
 
+void forkAndDownloadNImage(int number){
+    pid_t child_id;
+    int status;
+    child_id = fork();
+
+    if(child_id<0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        for (int i = 0; i < number; i++){
+            char link[] = "https://picsum.photos/";
+            char name[10000];
+            getTime(name);
+            int size = (time(NULL)%1000) + 100;
+            char sizeString[10000];
+            intToString(size,sizeString,10);
+            strcat(link,sizeString);
+            forkAndDownloadImage(name,link);
+            sleep(5);
+        }
+    }else{
+        wait(&status);
+        return;
+    }
+    
+}
+
 void makeKiller1(){
-    FILE * file = fopen("soal2_killer","w+");
+    FILE * file = fopen("killer","w+");
     fprintf(file,"#!/bin/bash\n");
     fprintf(file,"pkill soal2\n");
     fprintf(file,"rm -- \"$0\"\n");
     fclose(file);
-    chmod("soal2_killer", ~0);
+    chmod("killer", ~0);
 }
 
 void makeKiller2(){
-    FILE * file = fopen("soal2_killer","w+");
+    FILE * file = fopen("killer","w+");
     fprintf(file,"#!/bin/bash\n");
     fprintf(file,"parent_id=$(ps -aux | grep soal2 | grep Ss | cut -d \" \" -f 6)\n");
     fprintf(file,"kill -9 $parent_id\n");
     fprintf(file,"rm -- \"$0\"\n");
     fclose(file);
-    chmod("soal2_killer", ~0);
+    chmod("killer", ~0);
 }
 
 int main(int argc, char ** argv){
@@ -182,18 +211,7 @@ int main(int argc, char ** argv){
             if(chdir(dirPath) < 0){
                 exit(EXIT_FAILURE);
             }
-            for (int i = 0; i < 20; i++)
-            {
-                char link[] = "https://picsum.photos/";
-                char name[10000];
-                getTime(name);
-                int size = (time(NULL)%1000) + 100;
-                char sizeString[10000];
-                intToString(size,sizeString,10);
-                strcat(link,sizeString);
-                forkAndDownloadImage(name,link);
-                sleep(5);
-            }
+            forkAndDownloadNImage(20);
             if(chdir("..") < 0){
                 exit(EXIT_FAILURE);
             }
