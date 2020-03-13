@@ -26,7 +26,6 @@ int to_number(char *s){
     int sum = 0;
     int multiplier = 1;
     for(int i=strlen(s)-1;i>=0;i--){
-        // printf("loop %d\n",sum);
         sum += (s[i]-'0')*multiplier;
         multiplier *= 10;
     }
@@ -38,9 +37,7 @@ int checkNumber(char *s,int num){
         if(s[0] == '*') return 1;
     }
     if(!digits_only(s)) return 0;
-    // printf("%s\n",s);
     int sum = to_number(s);
-    // printf("%d\n",sum);
     if(sum <0) return 0;
     return (sum<=num);
 }
@@ -50,11 +47,9 @@ int checkInput(char * arg1, char * arg2, char * arg3){
         return 0;
     } 
     if(!checkNumber(arg2,59)) {
-        // printf("%s\n",arg2);
         return 0;
     } 
     if(!checkNumber(arg3,23)){
-        // printf("%s\n",arg3);
         return 0;
     } 
 }
@@ -65,15 +60,12 @@ int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
     if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
         sleepTime += 1;
     }
-    // printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
     if(curTime->tm_min != to_number(min) && strcmp(min,"*") != 0){
         sleepTime += 1;
     }
-    // printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
     if(curTime->tm_hour != to_number(hour) && strcmp(hour,"*") != 0){
         sleepTime += 1;
     }
-    // printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
     if(sleepTime == 0) return 1;
     else return 0;
 }
@@ -81,7 +73,6 @@ int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
 char * getdir(char* dir){
     char * finaldir = (char*) malloc(sizeof(char)*strlen(dir));
     strcpy(finaldir,dir);
-    // printf("%s\n",finaldir);
     for (int i = strlen(finaldir)-1; i > 0; i--)
     {
         if(finaldir[i-1] == '/'){
@@ -144,7 +135,6 @@ int main(int argc, char * argv[]) {
             sleep(1);
             continue;
         }
-        // return 0;
 
         pid_t child_id;
         child_id = fork();

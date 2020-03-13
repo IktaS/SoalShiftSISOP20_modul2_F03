@@ -17,7 +17,6 @@ void intToString(int num, char * string, int base){
     char buffer[10000];
     memset(buffer,0,sizeof(buffer));
     sprintf(buffer,"%d",num);
-    // printf("%s\n",buffer);
     strcpy(string,buffer);
 }
 void printCurrentDirectory(){
@@ -95,23 +94,19 @@ void forkAndMakeDir(char * finalDir,char * dir){
         execv("/usr/bin/mkdir",argv);
     }else{
         wait(&status);
-        // printf("%s\n",finalDir);
         return;
     }
 }
 
 void forkAndDownloadImage(char * name, char * link){
-    // printCurrentDirectory();
     pid_t child_id;
     int status;
 
     child_id = fork();
-    // printf("%d\n",child_id);
     if(child_id < 0){
         exit(EXIT_FAILURE);
     }
     if(child_id == 0){
-        // printf("masuk");
         char *argv[] = {"wget","-q","-O",name,link,NULL};
         execv("/usr/bin/wget",argv);
     }else{
@@ -176,7 +171,6 @@ int main(int argc, char ** argv){
 
     while (1) {
         pid_t child_id;
-        // int stat2;
         child_id = fork();
         if(child_id<0){
             exit(EXIT_FAILURE);
@@ -185,9 +179,7 @@ int main(int argc, char ** argv){
             char timeString[10000];
             getTime(timeString);
             char dirPath[10000];
-            // printf("%s\n",timeString);
             forkAndMakeDir(dirPath,timeString);
-            // printf("%s\n",dirPath);
             if(chdir(dirPath) < 0){
                 exit(EXIT_FAILURE);
             }
@@ -200,10 +192,8 @@ int main(int argc, char ** argv){
                 char sizeString[10000];
                 intToString(size,sizeString,10);
                 strcat(link,sizeString);
-                // printf("%s\n%s\n",name,link);
                 forkAndDownloadImage(name,link);
                 sleep(5);
-                // printf("%d\n",i);
             }
             if(chdir("..") < 0){
                 exit(EXIT_FAILURE);
@@ -214,15 +204,9 @@ int main(int argc, char ** argv){
             strcpy(folderName,timeString);
             forkAndZipDir(zipName,folderName);
             RemoveDir(folderName);
-            // printf("keluar");
-            // kill((int)getpid(),SIGKILL);
-            // wait(NULL);
-            // return 0;
         }else{
-            // wait(&stat2);
             sleep(30);
             continue;
-            // return 0;
         }
     }
 }
