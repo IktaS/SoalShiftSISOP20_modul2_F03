@@ -59,22 +59,23 @@ int checkInput(char * arg1, char * arg2, char * arg3){
     } 
 }
 
-int calculateNeedToSleep(struct tm * curTime,char * sec, char * min, char * hour){
+int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
     int sleepTime = 0;
+
     if(curTime->tm_sec != to_number(sec) && strcmp(sec,"*") != 0){
-        sleepTime += ((60-curTime->tm_sec) + to_number(sec))%60;
+        sleepTime += 1;
     }
     // printf("cur sec:%d %d\n",curTime->tm_sec,sleepTime);
     if(curTime->tm_min != to_number(min) && strcmp(min,"*") != 0){
-        sleepTime += (((60-curTime->tm_min) + to_number(min))%60)*60;
+        sleepTime += 1;
     }
     // printf("cur min:%d %d\n",curTime->tm_min,sleepTime);
     if(curTime->tm_hour != to_number(hour) && strcmp(hour,"*") != 0){
-        sleepTime += (((24-curTime->tm_hour) + to_number(hour))%24)*3600;
+        sleepTime += 1;
     }
     // printf("cur hour:%d %d\n",curTime->tm_hour,sleepTime);
-    if(sleepTime == 0) sleepTime = 1;
-    return sleepTime;
+    if(sleepTime == 0) return 1;
+    else return 0;
 }
 
 char * getdir(char* dir){
@@ -102,17 +103,6 @@ int main(int argc, char * argv[]) {
         printf("Bad Path");
         exit(EXIT_FAILURE);
     }
-
-    // while(1){
-    //     time_t rawTime;
-    //     struct tm * currentTime;
-    //     time(&rawTime);
-    //     currentTime = localtime(&rawTime);
-    //     int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
-    //     sleep(sleepTime);
-    //     printf("%s\n",getdir(argv[4]));
-    // }
-    // return 0;
 
     pid_t pid, sid; 
 
@@ -150,8 +140,10 @@ int main(int argc, char * argv[]) {
         time(&rawTime);
         currentTime = localtime(&rawTime);
 
-        int sleepTime = calculateNeedToSleep(currentTime,argv[1],argv[2],argv[3]);
-        sleep(sleepTime);
+        if(!stopDoing(currentTime,argv[1],argv[2],argv[3])){
+            sleep(1);
+            continue;
+        }
         // return 0;
 
         pid_t child_id;
@@ -169,5 +161,6 @@ int main(int argc, char * argv[]) {
             char *bashargv[] = {"bash",argv[4],NULL};
             execv("/usr/bin/bash",bashargv);
         }
+        sleep(1);
     }
 }
