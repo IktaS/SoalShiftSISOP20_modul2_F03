@@ -116,22 +116,22 @@ void forkAndDownloadImage(char * name, char * link){
 }
 
 void makeKiller1(){
-    FILE * file = fopen("soal2_killer.sh","w+");
+    FILE * file = fopen("soal2_killer","w+");
     fprintf(file,"#!/bin/bash\n");
     fprintf(file,"pkill soal2\n");
     fprintf(file,"rm -- \"$0\"\n");
     fclose(file);
-    chmod("soal2_killer.sh", ~0);
+    chmod("soal2_killer", ~0);
 }
 
 void makeKiller2(){
-    FILE * file = fopen("soal2_killer.sh","w+");
+    FILE * file = fopen("soal2_killer","w+");
     fprintf(file,"#!/bin/bash\n");
     fprintf(file,"parent_id=$(ps -aux | grep soal2 | grep Ss | cut -d \" \" -f 6)\n");
     fprintf(file,"kill -9 $parent_id\n");
     fprintf(file,"rm -- \"$0\"\n");
     fclose(file);
-    chmod("soal2_killer.sh", ~0);
+    chmod("soal2_killer", ~0);
 }
 
 int main(int argc, char ** argv){
@@ -139,9 +139,8 @@ int main(int argc, char ** argv){
         makeKiller1();
     }else if(strcmp(argv[1],"-b")==0){
         makeKiller2();
-    }else{
-        makeKiller2();
     }
+
     pid_t pid, sid;
     pid = fork();
     if (pid < 0) {
