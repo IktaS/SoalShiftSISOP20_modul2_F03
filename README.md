@@ -271,6 +271,7 @@ getdir() adalah utility function untuk mendapatkan directory dari file.
 
 # Soal 2
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal2/soal2.c)
+
 Diminta membuat sebuah program "downloader" yang berjalan di background, yang bisa :
   a. membuat folder dengan nama timestamp "YYYY-mm-dd_HH:ii:ss" setiap 30 detik
   b. setiap folder itu diisi dengan 20 image berukuran t%1000 + 100(t adalah epoch unix), yang diambil dari picsum.photos setiap 5 detik.
@@ -279,7 +280,13 @@ Diminta membuat sebuah program "downloader" yang berjalan di background, yang bi
  
  main function:
  ```c
- int main(int argc, char ** argv){
+int main(int argc, char ** argv){
+    if(strcmp(argv[1],"-a") == 0){
+        makeKiller1();
+    }else if(strcmp(argv[1],"-b")==0){
+        makeKiller2();
+    }
+
     pid_t pid, sid;
     pid = fork();
     if (pid < 0) {
@@ -287,13 +294,6 @@ Diminta membuat sebuah program "downloader" yang berjalan di background, yang bi
     }
     if (pid > 0) {
         exit(EXIT_SUCCESS);
-    }
-    if(strcmp(argv[1],"-a") == 0){
-        makeKiller1();
-    }else if(strcmp(argv[1],"-b")==0){
-        makeKiller2();
-    }else{
-        makeKiller2();
     }
 
     umask(0);
@@ -328,18 +328,7 @@ Diminta membuat sebuah program "downloader" yang berjalan di background, yang bi
             if(chdir(dirPath) < 0){
                 exit(EXIT_FAILURE);
             }
-            for (int i = 0; i < 20; i++)
-            {
-                char link[] = "https://picsum.photos/";
-                char name[10000];
-                getTime(name);
-                int size = (time(NULL)%1000) + 100;
-                char sizeString[10000];
-                intToString(size,sizeString,10);
-                strcat(link,sizeString);
-                forkAndDownloadImage(name,link);
-                sleep(5);
-            }
+            forkAndDownloadNImage(20);
             if(chdir("..") < 0){
                 exit(EXIT_FAILURE);
             }
@@ -356,4 +345,225 @@ Diminta membuat sebuah program "downloader" yang berjalan di background, yang bi
     }
 }
 ```
-  
+Mari lihat per modulnya.
+```c
+if(strcmp(argv[1],"-a") == 0){
+    makeKiller1();
+}else if(strcmp(argv[1],"-b")==0){
+    makeKiller2();
+}
+```
+bagian ini untuk mengenerate file executable berdasarkan argumen
+```c
+void makeKiller1(){
+    FILE * file = fopen("killer","w+");
+    fprintf(file,"#!/bin/bash\n");
+    fprintf(file,"pkill soal2\n");
+    fprintf(file,"rm -- \"$0\"\n");
+    fclose(file);
+    chmod("killer", ~0);
+}
+
+void makeKiller2(){
+    FILE * file = fopen("killer","w+");
+    fprintf(file,"#!/bin/bash\n");
+    fprintf(file,"parent_id=$(ps -aux | grep soal2 | grep Ss | cut -d \" \" -f 6)\n");
+    fprintf(file,"kill -9 $parent_id\n");
+    fprintf(file,"rm -- \"$0\"\n");
+    fclose(file);
+    chmod("killer", ~0);
+}
+```
+makeKiller1() dan makeKiller2() adalah utility function untuk mengenerate file executable. makeKiller1() akan membuat file executable yang akan menjalankan killall soal2 untuk menghentikan semua process soal2, sedangkan makeKiller2() akan mencari PID dari session leader soal2, lalu membunuh session leadernya. Dengan cara ini, process pembuatan folder baru akan berhenti, tapi process download image, dll akan tetap berjalan di yang sudah berjalan.
+```c
+pid_t pid, sid;
+pid = fork();
+if (pid < 0) {
+    exit(EXIT_FAILURE);
+}
+if (pid > 0) {
+    exit(EXIT_SUCCESS);
+}
+
+umask(0);
+
+sid = setsid();
+if (sid < 0) {
+    exit(EXIT_FAILURE);
+}
+
+char buffer[10000];
+getcwd(buffer,sizeof(buffer));
+strcat(buffer,"/");
+if ((chdir(buffer)) < 0) {
+    exit(EXIT_FAILURE);
+}
+
+close(STDIN_FILENO);
+close(STDOUT_FILENO);
+close(STDERR_FILENO);
+```
+bagian ini membuat program utama menjadi daemon.
+```c
+pid_t child_id;
+child_id = fork();
+if(child_id<0){
+    exit(EXIT_FAILURE);
+}
+if(child_id == 0){
+    char timeString[10000];
+    getTime(timeString);
+    char dirPath[10000];
+    forkAndMakeDir(dirPath,timeString);
+    if(chdir(dirPath) < 0){
+        exit(EXIT_FAILURE);
+    }
+    forkAndDownloadNImage(20);
+    if(chdir("..") < 0){
+        exit(EXIT_FAILURE);
+    }
+    char zipName[10000];
+    char folderName[10000];
+    strcpy(zipName,timeString);
+    strcpy(folderName,timeString);
+    forkAndZipDir(zipName,folderName);
+    RemoveDir(folderName);
+}else{
+    sleep(30);
+    continue;
+}
+```
+di dalam while(1), pertama kita membuat child, di child inilah dijalankan process membuat folder dengan forkAndMakeDir(), mendownload 20 image dengan forkAndDownloadNImage(20), membuat zip dengan forkAndZipDir(), dan menghapus directory dengan RemoveDir(). dilakukan pembuatan child agar tetap bisa dilakukan pembuatan folder walaupun masih ada process mendownload di folder lain.
+```c
+void forkAndMakeDir(char * finalDir,char * dir){
+    pid_t child_id;
+    int status;
+    char buffer[10000];
+    memset(buffer,0,sizeof(buffer));
+    getcwd(buffer,sizeof(buffer));
+    strcpy(finalDir,buffer);
+    strcat(finalDir,"/");
+    strcat(finalDir,dir);
+    strcat(finalDir,"/");
+    child_id = fork();
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+
+    if(child_id == 0){
+        char * argv[] = {"mkdir","-p",dir,NULL};
+        execv("/usr/bin/mkdir",argv);
+    }else{
+        wait(&status);
+        return;
+    }
+}
+```
+forkAndMakeDir(finalDir,dir) digunakan untuk membuat directory bernama dir, dan passing path akhir dari directory yang dibuat ke finalDir.
+```c
+if(chdir(dirPath) < 0){
+    exit(EXIT_FAILURE);
+}
+forkAndDownloadNImage(20);
+if(chdir("..") < 0){
+    exit(EXIT_FAILURE);
+}
+```
+pertama kita perlu pindah ke dalam folder dimana kita ingin mendownload image kita, setelah selesai kita juga kembali ke parent folder folder itu.
+```c
+void forkAndDownloadNImage(int number){
+    pid_t child_id;
+    int status;
+    child_id = fork();
+
+    if(child_id<0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        for (int i = 0; i < number; i++){
+            char link[] = "https://picsum.photos/";
+            char name[10000];
+            getTime(name);
+            int size = (time(NULL)%1000) + 100;
+            char sizeString[10000];
+            intToString(size,sizeString,10);
+            strcat(link,sizeString);
+            forkAndDownloadImage(name,link);
+            sleep(5);
+        }
+    }else{
+        wait(&status);
+        return;
+    }
+    
+}
+```
+untuk mendownload image sebanyak number dengan forkAndDownloadImage(), dijarak sebanyak 5 detik dengan sleep(5), dan hanya return ketika selesai menunggu semua terdownload.
+```c
+void forkAndDownloadImage(char * name, char * link){
+    pid_t child_id;
+    int status;
+
+    child_id = fork();
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        char *argv[] = {"wget","-q","-O",name,link,NULL};
+        execv("/usr/bin/wget",argv);
+    }else{
+        return;
+    }
+}
+```
+bagian ini untuk membuat child lalu mendownload image dengan execv wget di child tersebut.
+```c
+char zipName[10000];
+char folderName[10000];
+strcpy(zipName,timeString);
+strcpy(folderName,timeString);
+```
+bagian ini untuk mendapatkan nama folder dan zip file
+```c
+void forkAndZipDir(char * finalFileName,char * dir){
+    pid_t child_id;
+    int status;
+    strcat(finalFileName,".zip");
+    char buffer[10000];
+    memset(buffer,0,sizeof(buffer));
+    strcpy(buffer,dir);
+    strcat(buffer,"/");
+    child_id = fork();
+
+
+    if(child_id < 0){
+        exit(EXIT_FAILURE);
+    }
+    if(child_id == 0){
+        char * argv[] = {"zip","-q","-r",finalFileName,buffer,NULL};
+        execv("/usr/bin/zip",argv);
+    }else{
+        wait(&status);
+        return;
+    }
+}
+```
+forkAndZipDir(finalFileName,dir) akan menzip directory di dir, lalu passing output dari finalFileName menjadi finalFileName.zip, dan hanya return ketika zip selesai.
+```c
+void RemoveDir(char * dirPath){
+    char * argv[] = {"rm","-rf",dirPath,NULL};
+    execv("/usr/bin/rm",argv);
+}
+```
+RemoveDir(dirPath) untuk menghapus sebuah directory dirPath.
+
+# Soal 3
+[Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal3/soal3.c)
+
+Diminta untuk membuat program yang bisa :
+  a. membuat dua directory, indomie dan sedaap di /home/[USER]/modul2/
+  b. mengekstrak file jpg.zip di /home/[USER]/modul2/
+  c. memindahkan hasil ekstrak zip, /home/[USER]/modul2/jpg/ , semua file ke folder sedaap, dan semua directory ke folder indomie
+  d. membuat dua file kosong coba1.txt dan coba2.txt ke semua folder di /home/[USER]/modul2/indomie/
+
