@@ -1,1 +1,0 @@
-date +"%T" >> time.txt
