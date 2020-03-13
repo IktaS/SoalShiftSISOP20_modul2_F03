@@ -43,21 +43,10 @@ int digitNum(int num){
     }
     return i;
 }
-void forkAndRemoveDir(char * dirPath){
-    pid_t child_id;
-    int status;
-    child_id = fork();
+void RemoveDir(char * dirPath){
 
-    if(child_id<0){
-        exit(EXIT_FAILURE);
-    }
-    if(child_id == 0){
-        char * argv[] = {"rm","-rf",dirPath,NULL};
-        execv("/usr/bin/rm",argv);
-    }else{
-        wait(&status);
-        return;
-    }
+    char * argv[] = {"rm","-rf",dirPath,NULL};
+    execv("/usr/bin/rm",argv);
 }
 
 void forkAndZipDir(char * finalFileName,char * dir){
@@ -131,7 +120,26 @@ void forkAndDownloadImage(char * name, char * link){
     }
 }
 
-int main(){
+void makeKiller1(){
+    FILE * file = fopen("soal2_killer.sh","w+");
+    fprintf(file,"#!/bin/bash\n");
+    fprintf(file,"pkill soal2\n");
+    fprintf(file,"rm -- \"$0\"\n");
+    fclose(file);
+    chmod("soal2_killer.sh", ~0);
+}
+
+void makeKiller2(){
+    FILE * file = fopen("soal2_killer.sh","w+");
+    fprintf(file,"#!/bin/bash\n");
+    fprintf(file,"parent_id=$(ps -aux | grep soal2 | grep Ss | cut -d \" \" -f 6)\n");
+    fprintf(file,"kill -9 $parent_id\n");
+    fprintf(file,"rm -- \"$0\"\n");
+    fclose(file);
+    chmod("soal2_killer.sh", ~0);
+}
+
+int main(int argc, char ** argv){
     pid_t pid, sid;
     pid = fork();
     if (pid < 0) {
@@ -139,6 +147,13 @@ int main(){
     }
     if (pid > 0) {
         exit(EXIT_SUCCESS);
+    }
+    if(strcmp(argv[1],"-a") == 0){
+        makeKiller1();
+    }else if(strcmp(argv[1],"-b")==0){
+        makeKiller2();
+    }else{
+        makeKiller2();
     }
 
     umask(0);
@@ -161,6 +176,7 @@ int main(){
 
     while (1) {
         pid_t child_id;
+        // int stat2;
         child_id = fork();
         if(child_id<0){
             exit(EXIT_FAILURE);
@@ -197,11 +213,13 @@ int main(){
             strcpy(zipName,timeString);
             strcpy(folderName,timeString);
             forkAndZipDir(zipName,folderName);
-            forkAndRemoveDir(folderName);
+            RemoveDir(folderName);
             // printf("keluar");
-            kill((int)getpid(),SIGKILL);
-            return 0;
+            // kill((int)getpid(),SIGKILL);
+            // wait(NULL);
+            // return 0;
         }else{
+            // wait(&stat2);
             sleep(30);
             continue;
             // return 0;
