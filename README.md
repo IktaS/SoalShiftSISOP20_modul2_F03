@@ -145,6 +145,8 @@ int checkInput(char * arg1, char * arg2, char * arg3){
 }
 ```
 Keempat fungsi tersebut adalah utility function untuk membantu mentransformasi int menjadi string dan melakukan pengecekan.\
+Berikut adalah tampilan apabila argumen yang dimasukkan tidak sesuai:
+![gambar1](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal1/mod3soal1.png)
 Selanjutnya untuk menjalankan program di background sebagai daemon digunakan:
 
 ```c
@@ -279,7 +281,7 @@ Diminta membuat sebuah program "downloader" yang berjalan di background, yang bi
   b. setiap folder itu diisi dengan 20 image berukuran t%1000 + 100(t adalah epoch unix), yang diambil dari picsum.photos setiap 5 detik.  
   c. setelah terisi 20 image, folder tersebut di zip, lalu folder tersebut dihapus.  
   d. program mengenerate killer executable yang akan menghentikan semua process, berdasarkan mode yang diinput sebagai parameter di program utama, "-a" agar killer executable menghentikan semua process dari soal2, "-b" agar killer executable menghentikan process utama, tapi process yang masih berjalan dibiarkan.  
- 
+ ![gambar2](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal2/mod3soal2.png)
  main function:  
  ```c
 int main(int argc, char ** argv){
@@ -831,4 +833,8 @@ void forkAndTouch(char * filename){
     }
 }
 ```
-forkAndTouch akan membuat child lalu mengeksekusi execv touch di child itu.
+forkAndTouch akan membuat child lalu mengeksekusi execv touch di child itu.\
+\
+Kesulitan yang dialami selama pengerjaan:\
+-Adanya kesulitan mencari solusi yang efektif untuk nomor 1\
+-Masih belum terbiasa dengan menggunakan exec 
