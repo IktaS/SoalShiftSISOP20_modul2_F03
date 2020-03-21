@@ -4,7 +4,7 @@ Pengerjaan Praktikum 2 SisOp Kelompok F03
 ## Soal 1
 [Source Code](https://github.com/IktaS/SoalShiftSISOP20_modul2_F03/blob/master/soal1/soal1.c)
 
-Diminta membuat program seperti crontab, diminta :   
+Diminta membuat program yang berfungsi seperti crontab, diminta :   
   A. menerima 4 argumen :  
     i. Detik: 0-59 atau * (any value)  
     ii. Menit: 0-59 atau * (any value)  
@@ -14,7 +14,7 @@ Diminta membuat program seperti crontab, diminta :
   C. hanya menerima 1 config cron  
   D. berjalan di background  
   
-main function :
+Main function :
 ```c
 int main(int argc, char * argv[]) {
 
@@ -88,7 +88,7 @@ int main(int argc, char * argv[]) {
     }
 }
 ```
-Mari breakdown per bagian.
+Mari breakdown per bagian:
 ```c
 if(argc <= 4 || !checkInput(argv[1],argv[2],argv[3])){
     printf("Bad Argument\n");
@@ -100,7 +100,7 @@ if(!fopen(argv[4], "r")){
     exit(EXIT_FAILURE);
 }
 ```
-akan mengecek apakah argumen yang dimasukkan sudah sesuai.
+akan mengecek apakah argumen yang dimasukkan sudah sesuai dengan bantuan fungsi-fungsi berikut:
 ```c
 int digits_only(const char *s)
 {
@@ -144,7 +144,9 @@ int checkInput(char * arg1, char * arg2, char * arg3){
     } 
 }
 ```
-keempat fungsi ini adalah utility function untuk membantu mentransformasi int menjadi string dan melakukan pengecekan.
+Keempat fungsi tersebut adalah utility function untuk membantu mentransformasi int menjadi string dan melakukan pengecekan.\
+Selanjutnya untuk menjalankan program di background sebagai daemon digunakan:
+
 ```c
 pid_t pid, sid; 
 
@@ -175,9 +177,8 @@ close(STDIN_FILENO);
 close(STDOUT_FILENO);
 close(STDERR_FILENO);
 ```
-akan menjalankan program di background  
-Sekarang masuk ke bagian pentingnya, apa yang dijalankan.  
-Di dalam while,  
+
+Untuk bagian pentingnya, di dalam ```while``` diisikan:  
 ```c
 time_t rawTime;
 struct tm * currentTime;
@@ -203,7 +204,8 @@ if(child_id == 0){
     execv("/usr/bin/bash",bashargv);
 }
 ```
-mari lihat lagi per bagiannya,
+Berikut adalah penjelasan tiap bagiannya::
+
 ```c
 time_t rawTime;
 struct tm * currentTime;
@@ -216,7 +218,7 @@ if(!stopDoing(currentTime,argv[1],argv[2],argv[3])){
     continue;
 }
 ```
-ini digunakan untuk mengulagi loop sampai sudah waktunya mengeksekusi.
+Digunakan untuk mengulagi loop sampai waktu eksekusi yang ditetapkan tiba.
 ```c
 int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
     int sleepTime = 0;
@@ -234,7 +236,7 @@ int stopDoing(struct tm * curTime,char * sec, char * min, char * hour){
     else return 0;
 }
 ```
-stopDoing() adalah utility function untuk membantu mengetahui apakah sudah waktu untuk menjalankan fungsi.
+stopDoing() adalah utility function untuk membantu mengetahui apakah sudah waktunya untuk menjalankan fungsi.
 ```c
 pid_t child_id;
 child_id = fork();
@@ -252,7 +254,7 @@ if(child_id == 0){
     execv("/usr/bin/bash",bashargv);
 }
 ```
-bagian ini akan membuat child, dan childnya akan menjalankan shell script dengan execv.
+Bagian ini akan membuat child, dan childnya akan menjalankan shell script dengan execv.
 ```c
 char * getdir(char* dir){
     char * finaldir = (char*) malloc(sizeof(char)*strlen(dir));
